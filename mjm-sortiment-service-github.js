@@ -1,5 +1,5 @@
 /*
-MJM Sortiment & Service – externe JS-Datei für Wix
+MJM Sortiment & Service – externe JS-Datei für Wix | SEO-Marker-Fix v2
 
 Einbau:
 1. Diese Datei in den Wix-Medienmanager hochladen oder anderweitig öffentlich hosten.
@@ -130,21 +130,54 @@ Ziel auf der Seite:
   }
 
   function hidePlaceholder(section, marker) {
+    /*
+      SEO-Fix:
+      Der technische Marker darf nicht sichtbar bleiben und soll möglichst auch
+      nicht mehr als normaler Seiteninhalt im DOM stehen.
+    */
     if (marker) {
+      marker.textContent = "";
+      marker.innerHTML = "";
       marker.style.display = "none";
+      marker.style.visibility = "hidden";
+      marker.style.height = "0";
+      marker.style.maxHeight = "0";
+      marker.style.overflow = "hidden";
       marker.setAttribute("aria-hidden", "true");
+      marker.setAttribute("data-mjm-marker-removed", "true");
     }
 
     if (section) {
       section.setAttribute("data-mjm-placeholder", "true");
       section.style.display = "none";
+      section.style.visibility = "hidden";
       section.style.minHeight = "0";
       section.style.height = "0";
+      section.style.maxHeight = "0";
       section.style.margin = "0";
       section.style.padding = "0";
       section.style.overflow = "hidden";
+      section.setAttribute("aria-hidden", "true");
     }
   }
+
+  function scrubVisibleMarkers() {
+    const all = document.querySelectorAll("body *");
+    for (const el of all) {
+      if (el.textContent && el.textContent.trim() === TARGET_MARKER) {
+        el.textContent = "";
+        el.innerHTML = "";
+        el.style.display = "none";
+        el.style.visibility = "hidden";
+        el.style.height = "0";
+        el.style.maxHeight = "0";
+        el.style.overflow = "hidden";
+        el.setAttribute("aria-hidden", "true");
+        el.setAttribute("data-mjm-marker-removed", "true");
+      }
+    }
+  }
+
 
   function renderMjmSection() {
     if (document.getElementById(SECTION_ID)) return true;
@@ -187,6 +220,7 @@ Ziel auf der Seite:
     }
 
     hidePlaceholder(targetSection, marker);
+    scrubVisibleMarkers();
     runInnerScript();
 
     console.log("MJM Sortiment & Service wurde über externe JS-Datei eingefügt.");
@@ -216,11 +250,14 @@ Ziel auf der Seite:
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", tryRenderLoop);
   } else {
-    tryRenderLoop();
+    scrubVisibleMarkers();
+  tryRenderLoop();
   }
 
   if (!window.__MJM_EXTERNAL_OBSERVER) {
     window.__MJM_EXTERNAL_OBSERVER = new MutationObserver(function () {
+      scrubVisibleMarkers();
+
       const host = document.getElementById(HOST_ID);
       const marker = findMarkerElement();
       const target = marker || findAnchorElement();
